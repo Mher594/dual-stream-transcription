@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Krisp Capture</title>
+  <style>
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      margin: 12px;
+      min-width: 260px;
+      color: #1a1a1a;
+    }
+    h1 { font-size: 14px; margin: 0 0 8px; }
+    #status { font-size: 12px; margin-bottom: 10px; color: #444; }
+    .row { display: flex; gap: 8px; }
+    button {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #f5f5f5;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: default; }
+    #start { background: #1b7f4e; color: #fff; border-color: #16653e; }
+    #stop { background: #fff; }
+    label { font-size: 11px; display: block; margin-top: 10px; }
+    input { width: 100%; box-sizing: border-box; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Krisp Dual-Stream</h1>
+  <div id="status">Status: idle</div>
+  <div class="row">
+    <button id="start" type="button">Start</button>
+    <button id="stop" type="button" disabled>Stop</button>
+  </div>
+  <label>
+    Desktop WS port
+    <input id="port" type="number" min="1" max="65535" value="8765" />
+  </label>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

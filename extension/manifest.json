@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Krisp Dual-Stream Capture",
+  "version": "1.0.0",
+  "description": "Captures microphone and Meet tab audio separately and streams them to the Krisp desktop app.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Krisp Capture"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "tabCapture",
+    "offscreen",
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "worklet/pcm-processor.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

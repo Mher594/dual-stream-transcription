@@ -1,0 +1,95 @@
+# Krisp — Extension + Desktop Dual-Stream Pipeline
+
+Chrome extension + C++ desktop app: capture Meet as **mic** and **tab audio** separately, transcribe with Deepgram, show live dual-pane transcripts.
+
+More detail: [Architecture](docs/architecture.md) · [Full verification checklist](docs/verification.md) · [Troubleshooting](docs/troubleshooting.md)
+
+## Prerequisites
+
+| Tool | Notes |
+|------|--------|
+| Windows 10/11 x64 | Primary target |
+| Visual Studio 2022+ with C++ workload | MSVC + Ninja |
+| CMake ≥ 3.16 | Conan builds use **Ninja** |
+| Python 3.10+ | For Conan |
+| Conan 2 | `pip install "conan>=2,<3"` |
+| Google Chrome | Load unpacked extension |
+| Deepgram API key | https://console.deepgram.com/ |
+
+The first `conan install` downloads a prebuilt Qt when Conan Center has one for your toolchain — currently msvc `193` (VS 2022 up to 17.9). On newer MSVC there is no prebuilt and Qt compiles from source, which is a long one-time cost. The build uses your own detected Conan profile, so you get whichever applies.
+
+## Configuration
+
+```bash
+cp .env.example .env
+```
+
+Set `DEEPGRAM_API_KEY` (required). Optional: `KRISP_WS_PORT` (default `8765`) and `KRISP_STT_MODEL` (default `nova-2`, for comparing models without rebuilding). Never commit `.env`. The desktop searches upward from its working directory for `.env`; exported env vars win over the file.
+
+## Build
+
+From **PowerShell** at the repo root — no Developer Command Prompt needed, the script loads the VS tools itself:
+
+```powershell
+.\scripts\build.ps1     # conan install + cmake configure + build
+.\scripts\test.ps1      # run krisp_tests
+.\scripts\run.ps1       # start the desktop app
+```
+
+<details>
+<summary>Equivalent manual steps</summary>
+
+```bash
+cd desktop
+conan profile detect --exist-ok
+conan install . --build=missing -s:a compiler.cppstd=17 -c:a tools.cmake.cmaketoolchain:generator=Ninja
+
+cmake -S . -B build/Release -G Ninja ^
+  -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DCMAKE_POLICY_DEFAULT_CMP0091=NEW
+
+cmake --build build/Release
+```
+
+Presets (if generated): `cmake --preset conan-release` then `cmake --build --preset conan-release`.
+
+Tests and app — `conanrun.bat` puts Qt's DLLs on `PATH`:
+
+```bash
+cd desktop
+build\Release\generators\conanrun.bat
+build\Release\krisp_tests.exe      # or: ctest --test-dir build/Release --output-on-failure
+build\Release\krisp_desktop.exe
+```
+
+</details>
+
+## Run
+
+**Desktop first**, then the extension.
+
+```powershell
+.\scripts\run.ps1
+```
+
+Expect: `Listening on ws://127.0.0.1:8765`. The terminal keeps a timestamped log of connection and STT events; the window shows the current status and the first error of any failure.
+
+**Extension:**
+
+1. `chrome://extensions` → Developer mode → **Load unpacked** → `extension/`
+2. Open Meet (keep tab active) → extension icon → **Start**
+3. First run only: a tab opens asking for microphone access → **Allow**. It closes itself, and capture continues. Chrome remembers the grant.
+4. Watch Mic / Speaker panes in the desktop app → **Stop** when done
+
+## Quick verify
+
+- [ ] Build + `krisp_tests` pass
+- [ ] Desktop listening; extension connects; byte counters rise for both streams
+- [ ] Dual live transcripts; you can still hear the call
+
+Full checklist: [docs/verification.md](docs/verification.md). Problems: [docs/troubleshooting.md](docs/troubleshooting.md).
+
+## License
+
+Interview assignment / private use unless otherwise specified.

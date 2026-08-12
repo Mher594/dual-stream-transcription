@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Krisp — microphone access</title>
+  <style>
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      margin: 48px auto;
+      max-width: 480px;
+      color: #1a1a1a;
+      line-height: 1.5;
+    }
+    h1 { font-size: 18px; margin: 0 0 12px; }
+    p { font-size: 14px; color: #444; }
+    #msg.error { color: #b00020; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Allow microphone access</h1>
+  <p id="msg">
+    Chrome is asking for microphone permission — choose <b>Allow</b>.
+    This tab closes by itself once access is granted.
+  </p>
+  <script type="module" src="permission.js"></script>
+</body>
+</html>
