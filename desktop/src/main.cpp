@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
   krisp::TranscriptModel model;
   krisp::DeepgramClient micStt(krisp::StreamKind::Mic);
   krisp::DeepgramClient speakerStt(krisp::StreamKind::Speaker);
-  krisp::WsServer server(&model, &micStt, &speakerStt);
+  krisp::WsServer server(&micStt, &speakerStt);
 
   QObject::connect(&micStt, &krisp::DeepgramClient::transcript, &model,
                    &krisp::TranscriptModel::applyUpdate);

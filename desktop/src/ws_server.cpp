@@ -6,12 +6,8 @@
 
 namespace krisp {
 
-WsServer::WsServer(TranscriptModel* model,
-                   DeepgramClient* micStt,
-                   DeepgramClient* speakerStt,
-                   QObject* parent)
+WsServer::WsServer(DeepgramClient* micStt, DeepgramClient* speakerStt, QObject* parent)
     : QObject(parent),
-      model_(model),
       micStt_(micStt),
       speakerStt_(speakerStt),
       server_(QStringLiteral("KrispDesktop"), QWebSocketServer::NonSecureMode, this) {
@@ -19,7 +15,6 @@ WsServer::WsServer(TranscriptModel* model,
 }
 
 bool WsServer::listen(quint16 port) {
-  port_ = port;
   const bool ok = server_.listen(QHostAddress::LocalHost, port);
   if (ok) {
     setStatus(QStringLiteral("Listening on ws://127.0.0.1:%1").arg(server_.serverPort()));
