@@ -5,7 +5,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <vector>
 
 namespace krisp {
 
@@ -40,17 +39,14 @@ struct ControlMessage {
   std::string message;
 };
 
-struct AudioFrame {
-  uint8_t streamId = 0;
-  std::vector<std::int16_t> samples;
-};
-
 std::optional<ControlMessage> parseControlJson(std::string_view json);
 std::string makeHelloAckJson(int port);
 std::string makeErrorJson(std::string_view message);
 
-// Binary: [u8 stream_id][pcm s16le...]
-std::optional<AudioFrame> parseAudioFrame(const uint8_t* data, size_t size);
+// Binary frame: [u8 stream_id][pcm s16le…]. Returns the stream id when the frame
+// is well formed. The PCM is never decoded here — it is forwarded to Deepgram as
+// the bytes that arrived.
+std::optional<uint8_t> parseAudioFrame(const uint8_t* data, size_t size);
 
 bool isValidHello(const ControlMessage& msg);
 

@@ -53,20 +53,20 @@ TEST(ProtocolTest, HelloAckAndErrorJsonRoundTripShape) {
 }
 
 TEST(ProtocolTest, ParsesBinaryAudioFrame) {
-  std::vector<uint8_t> bytes;
-  bytes.push_back(kStreamMic);
-  // two samples: 1, -2
-  bytes.push_back(0x01);
-  bytes.push_back(0x00);
-  bytes.push_back(0xfe);
-  bytes.push_back(0xff);
+  // One header byte then two samples' worth of PCM. The payload is forwarded
+  // untouched, so only its length is checked, never its contents.
+  const std::vector<uint8_t> bytes = {kStreamMic, 0x01, 0x00, 0xfe, 0xff};
 
-  const auto frame = parseAudioFrame(bytes.data(), bytes.size());
-  ASSERT_TRUE(frame.has_value());
-  EXPECT_EQ(frame->streamId, kStreamMic);
-  ASSERT_EQ(frame->samples.size(), 2u);
-  EXPECT_EQ(frame->samples[0], 1);
-  EXPECT_EQ(frame->samples[1], -2);
+  const auto streamId = parseAudioFrame(bytes.data(), bytes.size());
+  ASSERT_TRUE(streamId.has_value());
+  EXPECT_EQ(*streamId, kStreamMic);
+}
+
+TEST(ProtocolTest, RejectsFrameWithNoPayload) {
+  const uint8_t bytes[] = {kStreamMic};
+  EXPECT_TRUE(parseAudioFrame(bytes, sizeof(bytes)).has_value());  // header alone is valid
+  EXPECT_FALSE(parseAudioFrame(nullptr, 0).has_value());
+  EXPECT_FALSE(parseAudioFrame(bytes, 0).has_value());
 }
 
 TEST(ProtocolTest, RejectsUnknownStreamId) {

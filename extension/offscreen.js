@@ -4,6 +4,7 @@ import {
   helloMessage,
   captureStartedMessage,
   captureStoppedMessage,
+  errorMessage,
   encodeAudioFrame,
   desktopWsUrl,
   SAMPLE_RATE,
@@ -230,8 +231,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         });
         sendResponse(result);
       } catch (err) {
-        await stopCapture();
         const detail = err?.message || String(err);
+        // Tell the desktop before tearing the socket down: the user is watching
+        // that window during a call, not this extension's popup.
+        sendJson(errorMessage(detail));
+        await stopCapture();
         reportStatus("error", detail);
         sendResponse({ error: detail });
       }

@@ -2,7 +2,6 @@
 
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <cstring>
 
 namespace krisp {
 
@@ -51,21 +50,13 @@ std::string makeErrorJson(std::string_view message) {
   return QJsonDocument(obj).toJson(QJsonDocument::Compact).toStdString();
 }
 
-std::optional<AudioFrame> parseAudioFrame(const uint8_t* data, size_t size) {
+std::optional<uint8_t> parseAudioFrame(const uint8_t* data, size_t size) {
   if (data == nullptr || size < kStreamIdBytes) return std::nullopt;
-  AudioFrame frame;
-  frame.streamId = data[0];
-  if (frame.streamId != kStreamMic && frame.streamId != kStreamSpeaker) {
-    return std::nullopt;
-  }
+  const uint8_t streamId = data[0];
+  if (streamId != kStreamMic && streamId != kStreamSpeaker) return std::nullopt;
   const size_t pcmBytes = size - kStreamIdBytes;
   if (pcmBytes % kBytesPerSample != 0) return std::nullopt;
-  const size_t sampleCount = pcmBytes / kBytesPerSample;
-  frame.samples.resize(sampleCount);
-  if (sampleCount > 0) {
-    std::memcpy(frame.samples.data(), data + kStreamIdBytes, pcmBytes);
-  }
-  return frame;
+  return streamId;
 }
 
 bool isValidHello(const ControlMessage& msg) {

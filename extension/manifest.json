@@ -14,21 +14,10 @@
   "permissions": [
     "tabCapture",
     "offscreen",
-    "tabs",
     "storage"
   ],
   "host_permissions": [
     "http://127.0.0.1/*",
     "http://localhost/*"
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "worklet/pcm-processor.js"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
-    }
   ]
 }

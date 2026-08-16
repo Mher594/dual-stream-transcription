@@ -101,15 +101,15 @@ void WsServer::onTextMessage(const QString& message) {
 
 void WsServer::onBinaryMessage(const QByteArray& message) {
   if (!helloOk_) return;
-  const auto frame = parseAudioFrame(reinterpret_cast<const uint8_t*>(message.constData()),
-                                     static_cast<size_t>(message.size()));
-  if (!frame) return;
+  const auto streamId = parseAudioFrame(reinterpret_cast<const uint8_t*>(message.constData()),
+                                        static_cast<size_t>(message.size()));
+  if (!streamId) return;
 
   const char* pcm = message.constData() + kStreamIdBytes;
   const qsizetype pcmSize = message.size() - static_cast<qsizetype>(kStreamIdBytes);
   if (pcmSize <= 0) return;
 
-  if (frame->streamId == kStreamMic) {
+  if (*streamId == kStreamMic) {
     micBytes_ += static_cast<quint64>(pcmSize);
     micStt_->sendPcm(pcm, pcmSize);
   } else {
