@@ -12,7 +12,6 @@ find_package(GTest REQUIRED)
 
 add_library(krisp_core STATIC
     src/deepgram_protocol.cpp
-    src/env_loader.cpp
     src/protocol.cpp
     src/transcript_model.cpp
 )
@@ -37,7 +36,6 @@ enable_testing()
 add_executable(krisp_tests
     tests/main.cpp
     tests/test_deepgram_protocol.cpp
-    tests/test_env_loader.cpp
     tests/test_protocol.cpp
     tests/test_transcript_model.cpp
     tests/test_stream_routing.cpp

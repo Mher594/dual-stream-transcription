@@ -20,11 +20,23 @@ The first `conan install` downloads a prebuilt Qt when Conan Center has one for 
 
 ## Configuration
 
-```bash
-cp .env.example .env
+The desktop app reads its configuration from environment variables — nothing else, no config file.
+
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `DEEPGRAM_API_KEY` | yes | — | Deepgram streaming STT key ([console](https://console.deepgram.com/)) |
+| `KRISP_WS_PORT` | no | `8765` | Port the desktop listens on for the extension |
+| `KRISP_STT_MODEL` | no | `nova-2` | Deepgram model, e.g. `nova-3` — for comparing accuracy without rebuilding |
+
+Set the key in the shell you launch from:
+
+```powershell
+$env:DEEPGRAM_API_KEY = "your_key_here"
 ```
 
-Set `DEEPGRAM_API_KEY` (required). Optional: `KRISP_WS_PORT` (default `8765`) and `KRISP_STT_MODEL` (default `nova-2`, for comparing models without rebuilding). Never commit `.env`. The desktop searches upward from its working directory for `.env`; exported env vars win over the file.
+That lasts for the current shell only. To persist it for future shells, run `setx DEEPGRAM_API_KEY "your_key_here"` once and open a new terminal.
+
+For a real deployment the key belongs in the OS credential store (Windows Credential Manager, macOS Keychain). That is deliberately not wired up here: it is platform-specific code, and it would replace one shell line with a manual credential-store step.
 
 ## Build
 
@@ -56,10 +68,12 @@ Presets (if generated): `cmake --preset conan-release` then `cmake --build --pre
 
 Tests and app — `conanrun.bat` puts Qt's DLLs on `PATH`:
 
-```bash
+```powershell
 cd desktop
 build\Release\generators\conanrun.bat
 build\Release\krisp_tests.exe      # or: ctest --test-dir build/Release --output-on-failure
+
+$env:DEEPGRAM_API_KEY = "your_key_here"
 build\Release\krisp_desktop.exe
 ```
 
@@ -70,6 +84,7 @@ build\Release\krisp_desktop.exe
 **Desktop first**, then the extension.
 
 ```powershell
+$env:DEEPGRAM_API_KEY = "your_key_here"
 .\scripts\run.ps1
 ```
 

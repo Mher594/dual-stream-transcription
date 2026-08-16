@@ -1,6 +1,6 @@
 # Manual verification checklist
 
-Use after a fresh clone on Windows. Automated tests cover the wire protocol, stream routing, Deepgram message assembly, transcript behaviour and `.env` loading; Meet capture and live STT stay manual.
+Use after a fresh clone on Windows. Automated tests cover the wire protocol, stream routing, Deepgram message assembly and transcript behaviour; Meet capture and live STT stay manual.
 
 ## Build and tests
 
@@ -10,7 +10,7 @@ Use after a fresh clone on Windows. Automated tests cover the wire protocol, str
 ## Desktop
 
 - [ ] App starts and shows `Listening on ws://127.0.0.1:8765` (or your `KRISP_WS_PORT`)
-- [ ] No red error line on startup when `.env` has a valid `DEEPGRAM_API_KEY`
+- [ ] Red error line on startup when `DEEPGRAM_API_KEY` is unset, and none when it is set
 
 ## Extension and capture
 

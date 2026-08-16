@@ -33,7 +33,7 @@ Extension (mic + tab audio) ──ws://127.0.0.1:8765──► Qt desktop
 | STT | Deepgram streaming; key lives on the **desktop only** |
 | UI | Qt **6.8.3** via Conan — never system Qt, never a hardcoded `C:/Qt` |
 | Port | `8765`, overridable via `KRISP_WS_PORT` |
-| Env vars | `DEEPGRAM_API_KEY` (required), `KRISP_WS_PORT`, `KRISP_STT_MODEL` — keep `.env.example` in step |
+| Config | Environment variables only: `DEEPGRAM_API_KEY` (required), `KRISP_WS_PORT`, `KRISP_STT_MODEL`. No config file, no dotfile search |
 | Tests | GoogleTest + gMock `1.17.0` |
 | JSON | `QJsonDocument` — no extra JSON library |
 
@@ -51,7 +51,7 @@ Pin exact versions — never ranges, never `latest`. Prefer current LTS, else la
 
 ## Secrets
 
-`.env` only, gitignored, `.env.example` kept in sync with every required key. Never commit keys; never print them to logs, UI, or README. Don't commit recorded PCM, wav dumps, or transcripts containing real meeting audio. Log counters and stream labels, not payloads.
+The key reaches the app through the environment, set by whoever launches it — the app never reads a config file. Document every variable in `README.md`. Never commit keys; never print them to logs, UI, or README. Don't commit recorded PCM, wav dumps, or transcripts containing real meeting audio. Log counters and stream labels, not payloads.
 
 ## Workflow
 

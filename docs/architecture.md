@@ -31,6 +31,7 @@ Extension connects to `ws://127.0.0.1:${KRISP_WS_PORT}`.
 ## Runtime model
 
 - Desktop app logic runs on the **Qt main event loop** (async WebSockets only; no worker threads).
+- Configuration is read from environment variables only — no config file, no dotfile search. Whoever launches the app sets them, the same contract the AWS SDK and most C++ services use.
 - Extension uses MV3 service worker + **offscreen document** for capture and WebSocket I/O.
 - Tab audio is played back through a media element in the offscreen document; tab capture otherwise removes it from normal playback and the call goes silent.
 - Deepgram finalises fragments far more often than a speaker pauses, so fragments are accumulated and committed as one line on `speech_final` (see `UtteranceAssembler`).
@@ -45,12 +46,11 @@ desktop/src/               # C++ Qt app (CMake + Conan)
 desktop/tests/             # GoogleTest suites
 docs/                      # Architecture, verification, troubleshooting
 CLAUDE.md                  # Working conventions and the locked-decision table
-.env.example
 task.md
 ```
 
 The desktop splits into three CMake targets: `krisp_core` holds the logic worth
-testing (wire protocol, Deepgram message assembly, transcript model, `.env`
-loading), `krisp_desktop` adds the sockets and the Qt window on top, and
+testing (wire protocol, Deepgram message assembly, transcript model),
+`krisp_desktop` adds the sockets and the Qt window on top, and
 `krisp_tests` covers `krisp_core`. Anything that parses or accumulates belongs
 in `krisp_core`, so it can be tested without a network.

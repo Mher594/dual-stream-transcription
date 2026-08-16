@@ -8,8 +8,8 @@
 | No transcripts | Read the red error line in the desktop window — it keeps the *first* (root) cause, e.g. `API key rejected (HTTP 401)`. It clears when both STT streams reconnect. The terminal running the app has the full timestamped sequence |
 | Status says `STT: mic down, speaker down` | Audio is arriving from the extension but Deepgram is not connected — the red line and the terminal log say why |
 | Can't hear the call while capturing | Reload the extension; tab audio is monitored back to speakers from the offscreen document |
-| `DEEPGRAM_API_KEY` not picked up | Copy `.env.example` → `.env` at repo root; real env vars override the file. Restart the desktop app |
+| `DEEPGRAM_API_KEY` not picked up | Set it in the *same* shell that launches the app: `$env:DEEPGRAM_API_KEY = "…"`. `$env:` does not survive into a new terminal — use `setx` once to persist it. Restart the desktop app after setting it |
 | `conan install` / CMake “Visual Studio …” generator error | The build passes `-c:a tools.cmake.cmaketoolchain:generator=Ninja`; use `.\scripts\build.ps1` rather than a bare `conan install` |
-| Transcription accuracy is poor | Try another model: set `KRISP_STT_MODEL` (e.g. `nova-3`) in `.env` and restart the desktop app. The log line `connecting with model …` confirms which one is live |
+| Transcription accuracy is poor | Try another model: `$env:KRISP_STT_MODEL = "nova-3"` before launching. The log line `connecting with model …` confirms which one is live |
 | Missing Qt DLLs at runtime | Run via `build/Release/generators/conanrun.bat` before the exe, or add Qt `bin` to `PATH` |
 | First `conan install` takes hours | Conan Center ships a prebuilt Qt for msvc `193` (VS 2022 ≤ 17.9) only; newer MSVC builds it from source. One-time cost, then cached |
