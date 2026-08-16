@@ -20,9 +20,11 @@ class WsServer : public QObject {
   void statusChanged(const QString& status);
   void statsChanged(quint64 micBytes, quint64 speakerBytes);
   void capturingChanged(bool capturing);
+  void errorRaised(const QString& message);
 
  private:
   void setStatus(const QString& status);
+  void raiseError(const QString& message);
   void onNewConnection();
   void onTextMessage(const QString& message);
   void onBinaryMessage(const QByteArray& message);

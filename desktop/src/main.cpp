@@ -42,6 +42,8 @@ int main(int argc, char* argv[]) {
   krisp::MainWindow window(&model, &server);
   QObject::connect(&server, &krisp::WsServer::capturingChanged, &window,
                    &krisp::MainWindow::setCapturing);
+  QObject::connect(&server, &krisp::WsServer::errorRaised, &window,
+                   &krisp::MainWindow::showError);
   for (auto* stt : {&micStt, &speakerStt}) {
     stt->setApiKey(apiKey);
     stt->setModel(sttModel);

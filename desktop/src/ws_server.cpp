@@ -31,6 +31,13 @@ void WsServer::setStatus(const QString& status) {
   emit statusChanged(status);
 }
 
+// Errors go to the persistent label rather than the status line, which the next
+// status change would overwrite — the same treatment STT failures get.
+void WsServer::raiseError(const QString& message) {
+  qWarning("%s", qUtf8Printable(message));
+  emit errorRaised(message);
+}
+
 void WsServer::onNewConnection() {
   while (server_.hasPendingConnections()) {
     QWebSocket* socket = server_.nextPendingConnection();
@@ -91,8 +98,8 @@ void WsServer::onTextMessage(const QString& message) {
       emit capturingChanged(false);
       break;
     case MessageType::Error:
-      setStatus(QStringLiteral("Extension error: %1")
-                    .arg(QString::fromStdString(parsed->message)));
+      raiseError(QStringLiteral("Extension error: %1")
+                     .arg(QString::fromStdString(parsed->message)));
       break;
     default:
       break;
