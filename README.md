@@ -51,15 +51,15 @@ From **PowerShell** at the repo root — no Developer Command Prompt needed, the
 <details>
 <summary>Equivalent manual steps</summary>
 
-```bash
+From a **Visual Studio Developer PowerShell** (these steps do not load the MSVC environment for you):
+
+```powershell
 cd desktop
 conan profile detect --exist-ok
 conan install . --build=missing -s:a compiler.cppstd=17 -c:a tools.cmake.cmaketoolchain:generator=Ninja
 
-cmake -S . -B build/Release -G Ninja ^
-  -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake ^
-  -DCMAKE_BUILD_TYPE=Release ^
-  -DCMAKE_POLICY_DEFAULT_CMP0091=NEW
+# Quote the -D arguments — PowerShell splits an unquoted one at ".cmake".
+cmake -S . -B build/Release -G Ninja "-DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake" "-DCMAKE_BUILD_TYPE=Release" "-DCMAKE_POLICY_DEFAULT_CMP0091=NEW"
 
 cmake --build build/Release
 ```

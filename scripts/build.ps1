@@ -20,10 +20,13 @@ try {
             -c:a tools.cmake.cmaketoolchain:generator=Ninja
     }
     Invoke-Step '[3/4] CMake configure...' {
+        # Quote the -D arguments. PowerShell splits an unquoted one at ".cmake",
+        # so cmake would receive a toolchain path with the extension missing —
+        # invisible on a warm CMakeCache, fatal on a fresh clone.
         cmake -S . -B build/Release -G Ninja `
-            -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_POLICY_DEFAULT_CMP0091=NEW
+            "-DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake" `
+            "-DCMAKE_BUILD_TYPE=Release" `
+            "-DCMAKE_POLICY_DEFAULT_CMP0091=NEW"
     }
     Invoke-Step '[4/4] Build...' {
         cmake --build build/Release
