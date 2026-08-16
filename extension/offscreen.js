@@ -59,11 +59,14 @@ function connectWs(port) {
       clearTimeout(timer);
       reject(new Error("WebSocket error — start the desktop app first"));
     };
-    socket.onclose = () => {
+    socket.onclose = async () => {
       ws = null;
-      if (capturing) {
-        reportStatus("error", "Desktop connection closed");
-      }
+      if (!capturing) return;
+      // Losing the desktop ends the capture. Leaving `capturing` set would drop
+      // every frame silently and make Start a no-op, because it early-returns on
+      // that flag — the extension would look busy while sending nothing.
+      await stopCapture();
+      reportStatus("error", "Desktop connection closed — press Start to capture again");
     };
     socket.onmessage = (ev) => {
       if (typeof ev.data !== "string") return;
