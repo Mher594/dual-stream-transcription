@@ -1,14 +1,30 @@
 #include "deepgram_client.h"
 
+#include "protocol.h"
+
 #include <QNetworkRequest>
 #include <QUrlQuery>
 
 namespace krisp {
 namespace {
 
-// ~2 s of 16 kHz mono s16le. Deepgram's socket needs a few hundred ms to open,
-// so without this the opening words of every session are lost.
-constexpr qsizetype kMaxPendingBytes = 16000 * 2 * 2;
+const QString kListenUrl = QStringLiteral("wss://api.deepgram.com/v1/listen");
+const QString kDefaultModel = QStringLiteral("nova-2");
+
+// Pause that means "end of sentence". Deepgram's default (10 ms) is shorter
+// than a gap between words and shatters a sentence across several lines.
+constexpr int kEndpointingMs = 300;
+// Flush if speech never pauses, otherwise an utterance would accumulate forever.
+constexpr int kUtteranceEndMs = 1000;
+// Wait while a previous socket finishes closing before opening a new one.
+constexpr int kSocketSettleMs = 250;
+constexpr int kReconnectBaseMs = 500;  // backoff: 0.5 s … 8 s
+constexpr int kPendingSeconds = 2;
+
+// Deepgram's socket needs a few hundred ms to open, so without this the
+// opening words of every session are lost.
+constexpr qsizetype kMaxPendingBytes =
+    static_cast<qsizetype>(kSampleRate) * kBytesPerSample * kPendingSeconds;
 
 // A rejected key makes Deepgram close immediately, so unbounded retries would
 // hammer the API. Give up after a few tries and say so instead.
@@ -17,7 +33,7 @@ constexpr int kMaxReconnectAttempts = 5;
 }  // namespace
 
 DeepgramClient::DeepgramClient(StreamKind stream, QObject* parent)
-    : QObject(parent), stream_(stream) {
+    : QObject(parent), stream_(stream), model_(kDefaultModel) {
   reconnectTimer_.setSingleShot(true);
   connect(&reconnectTimer_, &QTimer::timeout, this, [this]() {
     if (started_) openSocket();
@@ -59,21 +75,17 @@ void DeepgramClient::setModel(const QString& model) {
 }
 
 QUrl DeepgramClient::listenUrl() const {
-  QUrl url(QStringLiteral("wss://api.deepgram.com/v1/listen"));
+  QUrl url(kListenUrl);
   QUrlQuery q;
   q.addQueryItem(QStringLiteral("encoding"), QStringLiteral("linear16"));
-  q.addQueryItem(QStringLiteral("sample_rate"), QStringLiteral("16000"));
-  q.addQueryItem(QStringLiteral("channels"), QStringLiteral("1"));
+  q.addQueryItem(QStringLiteral("sample_rate"), QString::number(kSampleRate));
+  q.addQueryItem(QStringLiteral("channels"), QString::number(kChannels));
   q.addQueryItem(QStringLiteral("model"), model_);
   q.addQueryItem(QStringLiteral("interim_results"), QStringLiteral("true"));
   q.addQueryItem(QStringLiteral("punctuate"), QStringLiteral("true"));
   q.addQueryItem(QStringLiteral("smart_format"), QStringLiteral("true"));
-  // Break lines at real pauses. The default (10 ms) treats gaps between words
-  // as utterance ends, which shatters a sentence across several lines.
-  q.addQueryItem(QStringLiteral("endpointing"), QStringLiteral("300"));
-  // Backstop: continuous speech may never trigger speech_final, and without
-  // this an utterance would accumulate forever and never settle into a line.
-  q.addQueryItem(QStringLiteral("utterance_end_ms"), QStringLiteral("1000"));
+  q.addQueryItem(QStringLiteral("endpointing"), QString::number(kEndpointingMs));
+  q.addQueryItem(QStringLiteral("utterance_end_ms"), QString::number(kUtteranceEndMs));
   url.setQuery(q);
   return url;
 }
@@ -96,7 +108,7 @@ void DeepgramClient::openSocket() {
   if (socket_.state() != QAbstractSocket::UnconnectedState) {
     // Still closing from a previous capture. Wait for the socket to settle
     // rather than returning silently and leaving this stream dead.
-    reconnectTimer_.start(250);
+    reconnectTimer_.start(kSocketSettleMs);
     return;
   }
 
@@ -154,7 +166,7 @@ void DeepgramClient::scheduleReconnect() {
   }
 
   ++reconnectAttempts_;
-  const int delayMs = 500 * (1 << (reconnectAttempts_ - 1));  // 0.5 s … 8 s
+  const int delayMs = kReconnectBaseMs * (1 << (reconnectAttempts_ - 1));
   raiseError(QStringLiteral("Deepgram (%1): disconnected — retrying in %2 ms (%3/%4)")
                          .arg(label())
                          .arg(delayMs)

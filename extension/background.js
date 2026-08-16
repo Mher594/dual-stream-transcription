@@ -1,5 +1,11 @@
+import { DEFAULT_PORT } from "./protocol.js";
+
 const OFFSCREEN_URL = "offscreen.html";
 const PERMISSION_URL = "permission.html";
+
+// How long to leave the permission tab open waiting for a decision before
+// giving up and letting capture continue without the microphone.
+const PERMISSION_TIMEOUT_MS = 60000;
 
 let status = { status: "idle", detail: "" };
 
@@ -63,7 +69,7 @@ function waitForMicPermission() {
     const onMessage = (message) => {
       if (message?.type === "micPermissionResult") done(Boolean(message.granted));
     };
-    const timer = setTimeout(() => done(false), 60000);
+    const timer = setTimeout(() => done(false), PERMISSION_TIMEOUT_MS);
     chrome.runtime.onMessage.addListener(onMessage);
   });
 }
@@ -126,7 +132,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         const response = await chrome.runtime.sendMessage({
           type: "offscreenStart",
           streamId,
-          port: message.port || 8765,
+          port: message.port || DEFAULT_PORT,
         });
 
         if (response?.error) {

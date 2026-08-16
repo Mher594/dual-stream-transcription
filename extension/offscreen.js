@@ -7,7 +7,13 @@ import {
   encodeAudioFrame,
   desktopWsUrl,
   SAMPLE_RATE,
+  CHANNELS,
+  DEFAULT_PORT,
 } from "./protocol.js";
+
+// Long enough to cover a slow desktop start, short enough that "is the app
+// running?" arrives while the user is still looking at the popup.
+const CONNECT_TIMEOUT_MS = 5000;
 
 let ws = null;
 let micStream = null;
@@ -40,7 +46,7 @@ function connectWs(port) {
     const timer = setTimeout(() => {
       socket.close();
       reject(new Error("Desktop WebSocket connect timeout — is the app running?"));
-    }, 5000);
+    }, CONNECT_TIMEOUT_MS);
 
     socket.onopen = () => {
       clearTimeout(timer);
@@ -80,9 +86,14 @@ async function attachPcmPipeline(stream, streamId) {
   const node = new AudioWorkletNode(ctx, "pcm-processor", {
     numberOfInputs: 1,
     numberOfOutputs: 1,
-    channelCount: 1,
+    channelCount: CHANNELS,
     processorOptions: { sampleRate: SAMPLE_RATE, streamId },
   });
+  // The processor refuses to guess its rate or stream id, and a constructor
+  // failure on the audio thread is otherwise invisible.
+  node.onprocessorerror = () => {
+    reportStatus("error", `Audio processor failed for stream ${streamId}`);
+  };
   node.port.onmessage = (ev) => {
     if (!capturing || !ws || ws.readyState !== WebSocket.OPEN) return;
     const { streamId: sid, pcm } = ev.data || {};
@@ -131,7 +142,7 @@ async function startCapture({ streamId, port }) {
   try {
     micStream = await navigator.mediaDevices.getUserMedia({
       audio: {
-        channelCount: 1,
+        channelCount: CHANNELS,
         echoCancellation: true,
         noiseSuppression: true,
       },
@@ -215,7 +226,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       try {
         const result = await startCapture({
           streamId: message.streamId,
-          port: message.port || 8765,
+          port: message.port || DEFAULT_PORT,
         });
         sendResponse(result);
       } catch (err) {

@@ -70,8 +70,9 @@ void WsServer::onTextMessage(const QString& message) {
     case MessageType::Hello:
       if (!isValidHello(*parsed)) {
         if (client_) {
-          client_->sendTextMessage(QString::fromStdString(
-              makeErrorJson("hello must be pcm_s16le 16kHz mono")));
+          client_->sendTextMessage(QString::fromStdString(makeErrorJson(
+              "hello must be " + std::string(kPcmFormat) + " " +
+              std::to_string(kSampleRate) + " Hz mono")));
         }
         setStatus(QStringLiteral("Rejected hello (bad audio format)"));
         return;
@@ -109,8 +110,8 @@ void WsServer::onBinaryMessage(const QByteArray& message) {
                                      static_cast<size_t>(message.size()));
   if (!frame) return;
 
-  const char* pcm = message.constData() + 1;
-  const qsizetype pcmSize = message.size() - 1;
+  const char* pcm = message.constData() + kStreamIdBytes;
+  const qsizetype pcmSize = message.size() - static_cast<qsizetype>(kStreamIdBytes);
   if (pcmSize <= 0) return;
 
   if (frame->streamId == kStreamMic) {

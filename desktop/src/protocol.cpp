@@ -52,25 +52,25 @@ std::string makeErrorJson(std::string_view message) {
 }
 
 std::optional<AudioFrame> parseAudioFrame(const uint8_t* data, size_t size) {
-  if (data == nullptr || size < 1) return std::nullopt;
+  if (data == nullptr || size < kStreamIdBytes) return std::nullopt;
   AudioFrame frame;
   frame.streamId = data[0];
   if (frame.streamId != kStreamMic && frame.streamId != kStreamSpeaker) {
     return std::nullopt;
   }
-  const size_t pcmBytes = size - 1;
-  if (pcmBytes % 2 != 0) return std::nullopt;
-  const size_t sampleCount = pcmBytes / 2;
+  const size_t pcmBytes = size - kStreamIdBytes;
+  if (pcmBytes % kBytesPerSample != 0) return std::nullopt;
+  const size_t sampleCount = pcmBytes / kBytesPerSample;
   frame.samples.resize(sampleCount);
   if (sampleCount > 0) {
-    std::memcpy(frame.samples.data(), data + 1, pcmBytes);
+    std::memcpy(frame.samples.data(), data + kStreamIdBytes, pcmBytes);
   }
   return frame;
 }
 
 bool isValidHello(const ControlMessage& msg) {
   return msg.type == MessageType::Hello && msg.sampleRate == kSampleRate &&
-         msg.channels == 1 && msg.format == "pcm_s16le";
+         msg.channels == kChannels && msg.format == kPcmFormat;
 }
 
 }  // namespace krisp

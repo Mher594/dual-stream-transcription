@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -11,6 +12,15 @@ namespace krisp {
 constexpr uint8_t kStreamMic = 0;
 constexpr uint8_t kStreamSpeaker = 1;
 constexpr int kSampleRate = 16000;
+constexpr int kChannels = 1;
+constexpr int kBytesPerSample = 2;
+constexpr int kDefaultPort = 8765;
+constexpr const char* kPcmFormat = "pcm_s16le";
+
+// Audio frame layout: [u8 stream_id][pcm s16le…]. Named because the payload
+// offset and the payload length are derived from it in four places, and a bare
+// `1` there is indistinguishable from kChannels or kStreamSpeaker.
+constexpr std::size_t kStreamIdBytes = 1;
 
 enum class MessageType {
   Hello,

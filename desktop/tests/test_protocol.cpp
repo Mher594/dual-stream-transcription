@@ -13,27 +13,38 @@ using krisp::makeHelloAckJson;
 using krisp::makeErrorJson;
 using krisp::kStreamMic;
 using krisp::kStreamSpeaker;
+using krisp::kSampleRate;
+using krisp::kChannels;
+using krisp::kPcmFormat;
+using krisp::kDefaultPort;
+
+namespace {
+
+std::string helloJson(int sampleRate) {
+  return std::string(R"({"type":"hello","sampleRate":)") + std::to_string(sampleRate) +
+         R"(,"format":")" + kPcmFormat + R"(","channels":)" + std::to_string(kChannels) + "}";
+}
+
+}  // namespace
 
 TEST(ProtocolTest, ParsesValidHello) {
-  const auto msg = parseControlJson(
-      R"({"type":"hello","sampleRate":16000,"format":"pcm_s16le","channels":1})");
+  const auto msg = parseControlJson(helloJson(kSampleRate));
   ASSERT_TRUE(msg.has_value());
   EXPECT_EQ(msg->type, krisp::MessageType::Hello);
   EXPECT_TRUE(isValidHello(*msg));
 }
 
 TEST(ProtocolTest, RejectsBadHelloSampleRate) {
-  const auto msg = parseControlJson(
-      R"({"type":"hello","sampleRate":48000,"format":"pcm_s16le","channels":1})");
+  const auto msg = parseControlJson(helloJson(48000));
   ASSERT_TRUE(msg.has_value());
   EXPECT_FALSE(isValidHello(*msg));
 }
 
 TEST(ProtocolTest, HelloAckAndErrorJsonRoundTripShape) {
-  const auto ack = parseControlJson(makeHelloAckJson(8765));
+  const auto ack = parseControlJson(makeHelloAckJson(kDefaultPort));
   ASSERT_TRUE(ack.has_value());
   EXPECT_EQ(ack->type, krisp::MessageType::HelloAck);
-  EXPECT_EQ(ack->port, 8765);
+  EXPECT_EQ(ack->port, kDefaultPort);
 
   const auto err = parseControlJson(makeErrorJson("boom"));
   ASSERT_TRUE(err.has_value());

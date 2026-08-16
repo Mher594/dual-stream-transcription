@@ -12,6 +12,10 @@ namespace {
 // Settled lines live in the widget, so the widget owns the cap too.
 constexpr int kMaxLines = 500;
 
+// The scrollbar rarely lands exactly on maximum(), so "already at the bottom"
+// needs a little slack or following the tail would stop working.
+constexpr int kAtBottomSlack = 4;
+
 }  // namespace
 
 MainWindow::MainWindow(TranscriptModel* model, WsServer* server, QWidget* parent)
@@ -79,7 +83,7 @@ void MainWindow::appendLine(StreamKind stream, const QString& line) {
   // Only follow the tail if the reader is already there, so scrolling back
   // through the transcript during a call is not yanked away.
   QScrollBar* bar = view->verticalScrollBar();
-  const bool atBottom = bar->value() >= bar->maximum() - 4;
+  const bool atBottom = bar->value() >= bar->maximum() - kAtBottomSlack;
   view->appendPlainText(line);
   if (atBottom) bar->setValue(bar->maximum());
 }

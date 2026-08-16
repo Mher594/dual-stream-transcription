@@ -43,7 +43,7 @@ class DeepgramClient : public QObject {
 
   StreamKind stream_;
   QString apiKey_;
-  QString model_ = QStringLiteral("nova-2");
+  QString model_;
   QWebSocket socket_;
   UtteranceAssembler assembler_;
   QByteArray pending_;

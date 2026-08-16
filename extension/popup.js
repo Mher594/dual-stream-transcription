@@ -1,3 +1,5 @@
+import { DEFAULT_PORT } from "./protocol.js";
+
 const statusEl = document.getElementById("status");
 const startBtn = document.getElementById("start");
 const stopBtn = document.getElementById("stop");
@@ -32,7 +34,7 @@ startBtn.addEventListener("click", async () => {
     setUi({ status: "error", detail: "No active tab" });
     return;
   }
-  const port = Number(portInput.value) || 8765;
+  const port = Number(portInput.value) || DEFAULT_PORT;
   await chrome.storage.local.set({ wsPort: port });
   const result = await chrome.runtime.sendMessage({
     type: "startCapture",
@@ -51,6 +53,7 @@ stopBtn.addEventListener("click", async () => {
   await refresh();
 });
 
+portInput.value = String(DEFAULT_PORT);
 chrome.storage.local.get(["wsPort"]).then((v) => {
   if (v.wsPort) portInput.value = String(v.wsPort);
 });

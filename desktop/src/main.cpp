@@ -1,12 +1,15 @@
 #include "deepgram_client.h"
 #include "env_loader.h"
 #include "main_window.h"
+#include "protocol.h"
 #include "transcript_model.h"
 #include "ws_server.h"
 
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
+
+#include <limits>
 
 namespace {
 
@@ -40,11 +43,14 @@ int main(int argc, char* argv[]) {
   const QString apiKey =
       QString::fromStdString(krisp::envOrFile(fileEnv, "DEEPGRAM_API_KEY"));
 
-  quint16 port = 8765;
+  quint16 port = krisp::kDefaultPort;
   if (const std::string portStr = krisp::envOrFile(fileEnv, "KRISP_WS_PORT"); !portStr.empty()) {
     bool ok = false;
     const int p = QString::fromStdString(portStr).toInt(&ok);
-    if (ok && p > 0 && p < 65536) port = static_cast<quint16>(p);
+    // Upper bound is "fits in a port number", so take it from the type itself.
+    if (ok && p > 0 && p <= std::numeric_limits<quint16>::max()) {
+      port = static_cast<quint16>(p);
+    }
   }
 
   // Empty keeps the client's default model.
