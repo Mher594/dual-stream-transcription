@@ -61,9 +61,8 @@ scripts/                   # build.ps1 / test.ps1 / run.ps1 — the documented e
 extension/                 # Chrome MV3 (load unpacked)
 desktop/src/               # C++ Qt app (CMake + Conan)
 desktop/tests/             # GoogleTest suites
-docs/                      # Architecture, verification, troubleshooting
+docs/                      # Task brief, architecture, troubleshooting
 CLAUDE.md                  # Working conventions and the locked-decision table
-task.md
 ```
 
 The desktop splits into three CMake targets: `krisp_core` holds the logic worth

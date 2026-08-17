@@ -2,7 +2,7 @@
 
 Chrome extension captures **mic** and **Meet tab audio** separately → C++ Qt desktop app transcribes both → live transcripts with the two streams kept distinct.
 
-Source of truth for requirements: `task.md`. Don't invent requirements beyond it.
+Source of truth for requirements: `docs/task.md`. Don't invent requirements beyond it.
 
 ## Prime directive: simple, straightforward, elegant
 
@@ -63,7 +63,7 @@ The key reaches the app through the environment, set by whoever launches it — 
 
 ## Definition of done
 
-Builds via the documented Conan/CMake steps, `krisp_tests` pass, README still sufficient for a fresh clone, no secrets or build artifacts staged. Anything that parses or accumulates lives in `krisp_core` and gets unit tests — protocol framing, stream routing, Deepgram message assembly, transcript behaviour. Meet capture and live STT stay a manual checklist in `docs/verification.md`. Don't call something done without stating the verification path.
+Builds via the documented Conan/CMake steps, `krisp_tests` pass, README still sufficient for a fresh clone, no secrets or build artifacts staged. Anything that parses or accumulates lives in `krisp_core` and gets unit tests — protocol framing, stream routing, Deepgram message assembly, transcript behaviour. Meet capture and live STT are verified by running the app. Don't call something done without stating the verification path.
 
 ## Build (details in `README.md`)
 

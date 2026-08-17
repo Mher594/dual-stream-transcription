@@ -2,7 +2,7 @@
 
 Chrome extension + C++ desktop app: capture Meet as **mic** and **tab audio** separately, transcribe with Deepgram, and show a live transcript timeline where every line is labelled with the stream it came from.
 
-More detail: [Architecture](docs/architecture.md) · [Full verification checklist](docs/verification.md) · [Troubleshooting](docs/troubleshooting.md)
+More detail: [Architecture](docs/architecture.md) · [Troubleshooting](docs/troubleshooting.md)
 
 ## Prerequisites
 
@@ -96,14 +96,6 @@ Expect: `Listening on ws://127.0.0.1:8765`. The terminal keeps a timestamped log
 2. Open Meet (keep tab active) → extension icon → **Start**
 3. First run only: a tab opens asking for microphone access → **Allow**. It closes itself, and capture continues. Chrome remembers the grant.
 4. Watch the conversation timeline in the desktop app → **Stop** when done
-
-## Quick verify
-
-- [ ] Build + `krisp_tests` pass
-- [ ] Desktop listening; extension connects; byte counters rise for both streams
-- [ ] Live transcript lines labelled **You** / **Others**; you can still hear the call
-
-Full checklist: [docs/verification.md](docs/verification.md). Problems: [docs/troubleshooting.md](docs/troubleshooting.md).
 
 ## License
 
