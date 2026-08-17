@@ -1,8 +1,17 @@
 #pragma once
 
 #include <QString>
+#include <QUrl>
 
 namespace krisp {
+
+// Model used unless KRISP_STT_MODEL overrides it.
+constexpr const char* kDefaultSttModel = "nova-2";
+
+// The streaming request as a URL. Here rather than in the client because these
+// parameters are the Deepgram contract: drop one and the transcript quietly
+// changes shape without anything being raised.
+QUrl deepgramListenUrl(const QString& model);
 
 // What a Deepgram streaming message means to the rest of the app.
 struct DeepgramEvent {

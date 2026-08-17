@@ -1,8 +1,10 @@
 #pragma once
 
-#include "deepgram_client.h"
+#include "transcript_model.h"
 
+#include <QByteArray>
 #include <QObject>
+#include <QString>
 #include <QWebSocket>
 #include <QWebSocketServer>
 
@@ -11,29 +13,31 @@ namespace krisp {
 class WsServer : public QObject {
   Q_OBJECT
  public:
-  WsServer(DeepgramClient* micStt, DeepgramClient* speakerStt, QObject* parent = nullptr);
+  explicit WsServer(QObject* parent = nullptr);
 
   bool listen(quint16 port);
   quint16 port() const;
+
+  // The two things the extension sends. Public so the wire behaviour can be
+  // driven from a test without standing up a socket.
+  void handleControlMessage(const QString& message);
+  void handleAudioFrame(const QByteArray& message);
 
  signals:
   void statusChanged(const QString& status);
   void statsChanged(quint64 micBytes, quint64 speakerBytes);
   void capturingChanged(bool capturing);
   void errorRaised(const QString& message);
+  // Audio, already split by stream. Announced rather than pushed into an STT
+  // client, so this class never learns which engine transcribes it.
+  void audioReceived(StreamKind stream, const QByteArray& pcm);
 
  private:
   void setStatus(const QString& status);
   void raiseError(const QString& message);
   void onNewConnection();
-  void onTextMessage(const QString& message);
-  void onBinaryMessage(const QByteArray& message);
   void onSocketDisconnected();
-  void ensureSttStarted();
-  void stopStt();
 
-  DeepgramClient* micStt_ = nullptr;
-  DeepgramClient* speakerStt_ = nullptr;
   QWebSocketServer server_;
   QWebSocket* client_ = nullptr;
   quint64 micBytes_ = 0;

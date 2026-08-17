@@ -16,9 +16,9 @@ constexpr int kBytesPerSample = 2;
 constexpr int kDefaultPort = 8765;
 constexpr const char* kPcmFormat = "pcm_s16le";
 
-// Audio frame layout: [u8 stream_id][pcm s16le…]. Named because the payload
-// offset and the payload length are derived from it in four places, and a bare
-// `1` there is indistinguishable from kChannels or kStreamSpeaker.
+// Audio frame layout: [u8 stream_id][pcm s16le…]. Named because a bare `1`
+// where the payload starts is indistinguishable from kChannels or
+// kStreamSpeaker.
 constexpr std::size_t kStreamIdBytes = 1;
 
 enum class MessageType {

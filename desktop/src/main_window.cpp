@@ -20,6 +20,13 @@ constexpr int kAtBottomSlack = 4;
 constexpr int kTimeColumn = 76;
 constexpr int kChipColumn = 68;
 
+// takeAt hands over the item as well as the widget it holds, so both have to go.
+void dropOldestRow(QVBoxLayout* timeline) {
+  QLayoutItem* item = timeline->takeAt(0);
+  delete item->widget();
+  delete item;
+}
+
 // This is a light design, so every surface names its own colour. Inheriting the
 // system palette would leave the scroll area's viewport dark on a dark-mode
 // machine, with the line text painted dark on top of it.
@@ -183,6 +190,18 @@ QWidget* MainWindow::buildCard(QWidget* parent) {
   scroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   cardColumn->addWidget(scroll_, 1);
 
+  QScrollBar* bar = scroll_->verticalScrollBar();
+  // Inserting a row only schedules the layout, so the scrollbar's range grows a
+  // beat later. Following the tail has to wait for that, not for the insert.
+  connect(bar, &QScrollBar::rangeChanged, this, [this](int, int max) {
+    if (followTail_) scroll_->verticalScrollBar()->setValue(max);
+  });
+  // Scrolling away stops the tail following; scrolling back to the bottom
+  // resumes it. Reading history mid-call should not be yanked out from under.
+  connect(bar, &QScrollBar::valueChanged, this, [this](int value) {
+    followTail_ = value >= scroll_->verticalScrollBar()->maximum() - kAtBottomSlack;
+  });
+
   empty_ = new QWidget(card);
   empty_->setObjectName(QStringLiteral("empty"));
   auto* emptyColumn = new QVBoxLayout(empty_);
@@ -272,9 +291,6 @@ void MainWindow::appendLine(StreamKind stream, const QString& line) {
   const QString time = match.hasMatch() ? match.captured(1) : QString();
   const QString text = match.hasMatch() ? match.captured(2) : line;
 
-  QScrollBar* bar = scroll_->verticalScrollBar();
-  const bool atBottom = bar->value() >= bar->maximum() - kAtBottomSlack;
-
   // Settled rows go above the two in-flight rows and the trailing stretch.
   auto* row = makeRow(time, stream, text, false);
   if (lineCount_ == 0) row->setObjectName(QStringLiteral("rowFirst"));
@@ -282,13 +298,12 @@ void MainWindow::appendLine(StreamKind stream, const QString& line) {
   ++lineCount_;
 
   while (lineCount_ > kMaxLines) {
-    delete timeline_->takeAt(0)->widget();
+    dropOldestRow(timeline_);
     --lineCount_;
   }
 
   cleared_ = false;
   refreshEmptyState();
-  if (atBottom) bar->setValue(bar->maximum());
 }
 
 void MainWindow::setInterim(StreamKind stream, const QString& text) {
@@ -301,7 +316,7 @@ void MainWindow::setInterim(StreamKind stream, const QString& text) {
 
 void MainWindow::clearTimeline() {
   while (lineCount_ > 0) {
-    delete timeline_->takeAt(0)->widget();
+    dropOldestRow(timeline_);
     --lineCount_;
   }
   for (auto* interim : {&micInterim_, &speakerInterim_}) {

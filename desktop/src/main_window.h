@@ -58,6 +58,8 @@ class MainWindow : public QMainWindow {
   InterimRow micInterim_;
   InterimRow speakerInterim_;
   int lineCount_ = 0;
+  // Starts on: an empty timeline is already at its bottom.
+  bool followTail_ = true;
 
   QLabel* hint_ = nullptr;
   QPushButton* clearBtn_ = nullptr;

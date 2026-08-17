@@ -34,7 +34,7 @@ Extension (mic + tab audio) ──ws://127.0.0.1:8765──► Qt desktop
 | UI | Qt **6.8.3** via Conan — never system Qt, never a hardcoded `C:/Qt` |
 | Port | `8765`, overridable via `KRISP_WS_PORT` |
 | Config | Environment variables only: `DEEPGRAM_API_KEY` (required), `KRISP_WS_PORT`, `KRISP_STT_MODEL`. No config file, no dotfile search |
-| Tests | GoogleTest + gMock `1.17.0` |
+| Tests | GoogleTest `1.17.0` |
 | JSON | `QJsonDocument` — no extra JSON library |
 
 **Invariant:** `task.md` asks for the streams "kept separate so the conversation can be followed in a natural order". Both halves matter. *Separate* is structural and non-negotiable: separate capture, separate stream ids on the wire, separate STT sessions, never a mixed audio track. *Natural order* is what the UI is for — one timeline, every line naming the stream it came from. Interleaving is the point; dropping the label is the violation.

@@ -3,19 +3,10 @@
 #include "protocol.h"
 
 #include <QNetworkRequest>
-#include <QUrlQuery>
 
 namespace krisp {
 namespace {
 
-const QString kListenUrl = QStringLiteral("wss://api.deepgram.com/v1/listen");
-const QString kDefaultModel = QStringLiteral("nova-2");
-
-// Pause that means "end of sentence". Deepgram's default (10 ms) is shorter
-// than a gap between words and shatters a sentence across several lines.
-constexpr int kEndpointingMs = 300;
-// Flush if speech never pauses, otherwise an utterance would accumulate forever.
-constexpr int kUtteranceEndMs = 1000;
 // Wait while a previous socket finishes closing before opening a new one.
 constexpr int kSocketSettleMs = 250;
 constexpr int kReconnectBaseMs = 500;  // backoff: 0.5 s … 8 s
@@ -33,7 +24,7 @@ constexpr int kMaxReconnectAttempts = 5;
 }  // namespace
 
 DeepgramClient::DeepgramClient(StreamKind stream, QObject* parent)
-    : QObject(parent), stream_(stream), model_(kDefaultModel) {
+    : QObject(parent), stream_(stream), model_(QString::fromUtf8(kDefaultSttModel)) {
   reconnectTimer_.setSingleShot(true);
   connect(&reconnectTimer_, &QTimer::timeout, this, [this]() {
     if (started_) openSocket();
@@ -74,22 +65,6 @@ void DeepgramClient::setModel(const QString& model) {
   if (!model.isEmpty()) model_ = model;
 }
 
-QUrl DeepgramClient::listenUrl() const {
-  QUrl url(kListenUrl);
-  QUrlQuery q;
-  q.addQueryItem(QStringLiteral("encoding"), QStringLiteral("linear16"));
-  q.addQueryItem(QStringLiteral("sample_rate"), QString::number(kSampleRate));
-  q.addQueryItem(QStringLiteral("channels"), QString::number(kChannels));
-  q.addQueryItem(QStringLiteral("model"), model_);
-  q.addQueryItem(QStringLiteral("interim_results"), QStringLiteral("true"));
-  q.addQueryItem(QStringLiteral("punctuate"), QStringLiteral("true"));
-  q.addQueryItem(QStringLiteral("smart_format"), QStringLiteral("true"));
-  q.addQueryItem(QStringLiteral("endpointing"), QString::number(kEndpointingMs));
-  q.addQueryItem(QStringLiteral("utterance_end_ms"), QString::number(kUtteranceEndMs));
-  url.setQuery(q);
-  return url;
-}
-
 void DeepgramClient::start() {
   if (started_) return;
   started_ = true;
@@ -114,7 +89,7 @@ void DeepgramClient::openSocket() {
 
   qInfo("Deepgram (%s): connecting with model %s", qUtf8Printable(label()),
         qUtf8Printable(model_));
-  QNetworkRequest req(listenUrl());
+  QNetworkRequest req(deepgramListenUrl(model_));
   req.setRawHeader("Authorization", QByteArray("Token ") + apiKey_.toUtf8());
   socket_.open(req);
 }

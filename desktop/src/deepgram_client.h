@@ -36,7 +36,6 @@ class DeepgramClient : public QObject {
   void onConnected();
   void onDisconnected();
   void onTextMessage(const QString& message);
-  QUrl listenUrl() const;
   QString label() const;
 
   void dispatch(const DeepgramEvent& event);

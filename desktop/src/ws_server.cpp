@@ -6,10 +6,8 @@
 
 namespace krisp {
 
-WsServer::WsServer(DeepgramClient* micStt, DeepgramClient* speakerStt, QObject* parent)
+WsServer::WsServer(QObject* parent)
     : QObject(parent),
-      micStt_(micStt),
-      speakerStt_(speakerStt),
       server_(QStringLiteral("KrispDesktop"), QWebSocketServer::NonSecureMode, this) {
   connect(&server_, &QWebSocketServer::newConnection, this, &WsServer::onNewConnection);
 }
@@ -52,14 +50,14 @@ void WsServer::onNewConnection() {
     micBytes_ = 0;
     speakerBytes_ = 0;
     emit statsChanged(micBytes_, speakerBytes_);
-    connect(client_, &QWebSocket::textMessageReceived, this, &WsServer::onTextMessage);
-    connect(client_, &QWebSocket::binaryMessageReceived, this, &WsServer::onBinaryMessage);
+    connect(client_, &QWebSocket::textMessageReceived, this, &WsServer::handleControlMessage);
+    connect(client_, &QWebSocket::binaryMessageReceived, this, &WsServer::handleAudioFrame);
     connect(client_, &QWebSocket::disconnected, this, &WsServer::onSocketDisconnected);
     setStatus(QStringLiteral("Extension connected — waiting for hello"));
   }
 }
 
-void WsServer::onTextMessage(const QString& message) {
+void WsServer::handleControlMessage(const QString& message) {
   const auto parsed = parseControlJson(message.toStdString());
   if (!parsed) {
     if (client_) {
@@ -86,14 +84,12 @@ void WsServer::onTextMessage(const QString& message) {
       setStatus(QStringLiteral("Hello OK — ready for audio"));
       break;
     case MessageType::CaptureStarted:
-      ensureSttStarted();
       // Says only what this class can vouch for. Whether Deepgram is actually
       // reachable is the STT clients' business, and the UI appends that.
       setStatus(QStringLiteral("Capturing — receiving audio"));
       emit capturingChanged(true);
       break;
     case MessageType::CaptureStopped:
-      stopStt();
       setStatus(QStringLiteral("Capture stopped"));
       emit capturingChanged(false);
       break;
@@ -106,23 +102,18 @@ void WsServer::onTextMessage(const QString& message) {
   }
 }
 
-void WsServer::onBinaryMessage(const QByteArray& message) {
+void WsServer::handleAudioFrame(const QByteArray& message) {
   if (!helloOk_) return;
   const auto streamId = parseAudioFrame(reinterpret_cast<const uint8_t*>(message.constData()),
                                         static_cast<size_t>(message.size()));
   if (!streamId) return;
 
-  const char* pcm = message.constData() + kStreamIdBytes;
-  const qsizetype pcmSize = message.size() - static_cast<qsizetype>(kStreamIdBytes);
-  if (pcmSize <= 0) return;
+  const QByteArray pcm = message.mid(static_cast<qsizetype>(kStreamIdBytes));
+  if (pcm.isEmpty()) return;
 
-  if (*streamId == kStreamMic) {
-    micBytes_ += static_cast<quint64>(pcmSize);
-    micStt_->sendPcm(pcm, pcmSize);
-  } else {
-    speakerBytes_ += static_cast<quint64>(pcmSize);
-    speakerStt_->sendPcm(pcm, pcmSize);
-  }
+  const bool mic = *streamId == kStreamMic;
+  (mic ? micBytes_ : speakerBytes_) += static_cast<quint64>(pcm.size());
+  emit audioReceived(mic ? StreamKind::Mic : StreamKind::Speaker, pcm);
   emit statsChanged(micBytes_, speakerBytes_);
 }
 
@@ -131,21 +122,9 @@ void WsServer::onSocketDisconnected() {
     client_->deleteLater();
     client_ = nullptr;
     helloOk_ = false;
-    stopStt();
     setStatus(QStringLiteral("Extension disconnected"));
     emit capturingChanged(false);
   }
-}
-
-void WsServer::ensureSttStarted() {
-  // A missing key surfaces as a persistent error from the client itself.
-  micStt_->start();
-  speakerStt_->start();
-}
-
-void WsServer::stopStt() {
-  micStt_->stop();
-  speakerStt_->stop();
 }
 
 }  // namespace krisp

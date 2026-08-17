@@ -32,7 +32,22 @@ int main(int argc, char* argv[]) {
   krisp::TranscriptModel model;
   krisp::DeepgramClient micStt(krisp::StreamKind::Mic);
   krisp::DeepgramClient speakerStt(krisp::StreamKind::Speaker);
-  krisp::WsServer server(&micStt, &speakerStt);
+  krisp::WsServer server;
+
+  // The server announces audio per stream; this is the only place that decides
+  // Deepgram is what transcribes it.
+  QObject::connect(&server, &krisp::WsServer::audioReceived,
+                   [&](krisp::StreamKind stream, const QByteArray& pcm) {
+                     krisp::DeepgramClient& stt =
+                         stream == krisp::StreamKind::Mic ? micStt : speakerStt;
+                     stt.sendPcm(pcm.constData(), pcm.size());
+                   });
+  QObject::connect(&server, &krisp::WsServer::capturingChanged, [&](bool capturing) {
+    // A missing key surfaces as a persistent error from the client itself.
+    for (auto* stt : {&micStt, &speakerStt}) {
+      capturing ? stt->start() : stt->stop();
+    }
+  });
 
   QObject::connect(&micStt, &krisp::DeepgramClient::transcript, &model,
                    &krisp::TranscriptModel::applyUpdate);

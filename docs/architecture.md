@@ -33,7 +33,7 @@ line, which is what makes the order readable rather than working against it.
 
 ## Stack
 
-Qt **6.8.3** via Conan (never system Qt) — Qt WebSockets serves the extension *and* drives the two Deepgram clients, and `QJsonDocument` handles the control messages, so there is no second WebSocket or JSON library. Tests are GoogleTest + gMock **1.17.0**. Audio is PCM s16le, 16 kHz, mono throughout.
+Qt **6.8.3** via Conan (never system Qt) — Qt WebSockets serves the extension *and* drives the two Deepgram clients, and `QJsonDocument` handles the control messages, so there is no second WebSocket or JSON library. Tests are GoogleTest **1.17.0**. Audio is PCM s16le, 16 kHz, mono throughout.
 
 These choices are locked; [CLAUDE.md](../CLAUDE.md) has the full table and the conventions that go with them.
 
@@ -51,6 +51,7 @@ Extension connects to `ws://127.0.0.1:${KRISP_WS_PORT}`.
 - Configuration is read from environment variables only — no config file, no dotfile search. Whoever launches the app sets them, the same contract the AWS SDK and most C++ services use.
 - Extension uses MV3 service worker + **offscreen document** for capture and WebSocket I/O.
 - Tab audio is played back through a media element in the offscreen document; tab capture otherwise removes it from normal playback and the call goes silent.
+- `WsServer` announces audio per stream rather than pushing it into an STT client; `main.cpp` is the only place that knows Deepgram transcribes it. That is what lets stream routing be unit-tested without a socket or a key.
 - Deepgram finalises fragments far more often than a speaker pauses, so fragments are accumulated and committed as one line on `speech_final` (see `UtteranceAssembler`).
 - Microphone access is granted once from a visible tab (`permission.html`); the offscreen document has no window for Chrome to prompt in, and the grant is stored per extension origin.
 
@@ -66,7 +67,7 @@ CLAUDE.md                  # Working conventions and the locked-decision table
 ```
 
 The desktop splits into three CMake targets: `krisp_core` holds the logic worth
-testing (wire protocol, Deepgram message assembly, transcript model),
-`krisp_desktop` adds the sockets and the Qt window on top, and
-`krisp_tests` covers `krisp_core`. Anything that parses or accumulates belongs
-in `krisp_core`, so it can be tested without a network.
+testing (wire protocol, stream routing, Deepgram message assembly, transcript
+model), `krisp_desktop` adds the Deepgram clients and the Qt window on top, and
+`krisp_tests` covers `krisp_core`. Anything that parses, routes or accumulates
+belongs in `krisp_core`, so it can be tested without a network.

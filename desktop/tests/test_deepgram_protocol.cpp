@@ -2,6 +2,9 @@
 
 #include <gtest/gtest.h>
 
+#include <QUrlQuery>
+
+using krisp::deepgramListenUrl;
 using krisp::DeepgramEvent;
 using krisp::UtteranceAssembler;
 
@@ -92,4 +95,34 @@ TEST(UtteranceAssemblerTest, ResetsBetweenUtterances) {
 
   const auto second = a.consume(results(QStringLiteral("second sentence"), true, true));
   EXPECT_EQ(second.text, QStringLiteral("second sentence"));
+}
+
+TEST(DeepgramListenUrlTest, TargetsTheStreamingEndpoint) {
+  const QUrl url = deepgramListenUrl(QStringLiteral("nova-2"));
+  EXPECT_EQ(url.scheme(), QStringLiteral("wss"));
+  EXPECT_EQ(url.host(), QStringLiteral("api.deepgram.com"));
+  EXPECT_EQ(url.path(), QStringLiteral("/v1/listen"));
+}
+
+TEST(DeepgramListenUrlTest, CarriesEveryParameterTheTranscriptDependsOn) {
+  // Dropping one of these does not fail the connection — it silently changes
+  // what comes back, which is why they are pinned here rather than eyeballed.
+  const QUrlQuery q(deepgramListenUrl(QStringLiteral("nova-2")).query());
+
+  EXPECT_EQ(q.queryItemValue(QStringLiteral("encoding")), QStringLiteral("linear16"));
+  EXPECT_EQ(q.queryItemValue(QStringLiteral("sample_rate")), QStringLiteral("16000"));
+  EXPECT_EQ(q.queryItemValue(QStringLiteral("channels")), QStringLiteral("1"));
+  EXPECT_EQ(q.queryItemValue(QStringLiteral("interim_results")), QStringLiteral("true"));
+  EXPECT_EQ(q.queryItemValue(QStringLiteral("punctuate")), QStringLiteral("true"));
+  EXPECT_EQ(q.queryItemValue(QStringLiteral("smart_format")), QStringLiteral("true"));
+  EXPECT_EQ(q.queryItemValue(QStringLiteral("endpointing")), QStringLiteral("300"));
+  EXPECT_EQ(q.queryItemValue(QStringLiteral("utterance_end_ms")), QStringLiteral("1000"));
+}
+
+TEST(DeepgramListenUrlTest, SendsTheModelItIsGiven) {
+  const QUrlQuery def(deepgramListenUrl(QString::fromUtf8(krisp::kDefaultSttModel)).query());
+  EXPECT_EQ(def.queryItemValue(QStringLiteral("model")), QStringLiteral("nova-2"));
+
+  const QUrlQuery custom(deepgramListenUrl(QStringLiteral("nova-3")).query());
+  EXPECT_EQ(custom.queryItemValue(QStringLiteral("model")), QStringLiteral("nova-3"));
 }

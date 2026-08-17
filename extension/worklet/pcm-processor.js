@@ -29,7 +29,11 @@ class PcmProcessor extends AudioWorkletProcessor {
     if (!input || !input[0]) return true;
     const channel = input[0];
 
-    // Simple decimation / linear resample toward target rate.
+    // Decimation toward the target rate: keep one sample per ratio, drop the
+    // rest. No interpolation and no low-pass, so it would alias — acceptable
+    // only because the context is created at the target rate, making the ratio
+    // 1 and this a straight copy. The branch is a fallback for a browser that
+    // ignores the requested rate.
     for (let i = 0; i < channel.length; i++) {
       this._phase += 1;
       if (this._phase >= this._ratio) {
