@@ -13,10 +13,23 @@ let status = { status: "idle", detail: "" };
 // while capture carries on in the offscreen document. Session storage survives
 // that; it is cleared when the browser closes, which is exactly the lifetime we
 // want.
+// The manifest ships no icon artwork, so capture state rides on the action
+// badge — visible in the toolbar without opening the popup.
+const BADGE = {
+  capturing: { text: "●", color: "#1b7f4e" },
+  error: { text: "!", color: "#b00020" },
+};
+
 function broadcastStatus(next) {
   status = next;
   chrome.storage.session.set({ status: next }).catch(() => {});
   chrome.runtime.sendMessage({ type: "status", ...status }).catch(() => {});
+
+  const badge = BADGE[next.status];
+  chrome.action.setBadgeText({ text: badge ? badge.text : "" }).catch(() => {});
+  if (badge) {
+    chrome.action.setBadgeBackgroundColor({ color: badge.color }).catch(() => {});
+  }
 }
 
 async function currentStatus() {

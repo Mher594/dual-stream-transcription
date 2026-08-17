@@ -5,23 +5,42 @@
   <title>Krisp — microphone access</title>
   <style>
     body {
+      margin: 0;
+      padding: 48px;
+      display: flex;
+      justify-content: center;
       font-family: "Segoe UI", system-ui, sans-serif;
-      margin: 48px auto;
-      max-width: 480px;
       color: #1a1a1a;
-      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
-    h1 { font-size: 18px; margin: 0 0 12px; }
-    p { font-size: 14px; color: #444; }
-    #msg.error { color: #b00020; font-weight: bold; }
+    main { max-width: 480px; display: flex; flex-direction: column; gap: 12px; }
+    h1 { margin: 0; font: 600 18px/1.3 "Segoe UI", system-ui; }
+    #msg { margin: 0; font: 400 14px/1.5 "Segoe UI", system-ui; color: #444; text-wrap: pretty; }
+    #msg.error { font-weight: 700; color: #b00020; }
+    #note {
+      margin-top: 4px;
+      padding: 12px 14px;
+      background: #f8f9fa;
+      border: 1px solid #e8eaed;
+      border-radius: 4px;
+      font: 400 12px/1.5 "Segoe UI", system-ui;
+      color: #6b6b6b;
+      text-wrap: pretty;
+    }
   </style>
 </head>
 <body>
-  <h1>Allow microphone access</h1>
-  <p id="msg">
-    Chrome is asking for microphone permission — choose <b>Allow</b>.
-    This tab closes by itself once access is granted.
-  </p>
+  <main>
+    <h1>Allow microphone access</h1>
+    <p id="msg">
+      Chrome is asking for microphone permission — choose <b>Allow</b>.
+      This tab closes by itself once access is granted.
+    </p>
+    <div id="note">
+      Asked once per extension, from a real tab — the invisible capture document has no
+      window Chrome can prompt in.
+    </div>
+  </main>
   <script type="module" src="permission.js"></script>
 </body>
 </html>

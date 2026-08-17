@@ -22,7 +22,7 @@ Change these only when the user explicitly asks. Never silently swap stacks.
 ```
 Extension (mic + tab audio) ──ws://127.0.0.1:8765──► Qt desktop
                                                       ├─ 2× Deepgram STT (mic | speaker)
-                                                      └─ dual-pane live transcript UI
+                                                      └─ live transcript timeline, labelled per line
 ```
 
 | Concern | Choice |
@@ -37,7 +37,7 @@ Extension (mic + tab audio) ──ws://127.0.0.1:8765──► Qt desktop
 | Tests | GoogleTest + gMock `1.17.0` |
 | JSON | `QJsonDocument` — no extra JSON library |
 
-**Invariant:** mic and speaker identity stays separate end to end. Never mix the two into one track or one transcript pane.
+**Invariant:** `task.md` asks for the streams "kept separate so the conversation can be followed in a natural order". Both halves matter. *Separate* is structural and non-negotiable: separate capture, separate stream ids on the wire, separate STT sessions, never a mixed audio track. *Natural order* is what the UI is for — one timeline, every line naming the stream it came from. Interleaving is the point; dropping the label is the violation.
 
 ## Code
 

@@ -5,41 +5,137 @@
   <title>Krisp Capture</title>
   <style>
     body {
+      margin: 0;
+      padding: 14px;
+      min-width: 300px; /* mockup card width, padding included */
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
       font-family: "Segoe UI", system-ui, sans-serif;
-      margin: 12px;
-      min-width: 260px;
       color: #1a1a1a;
+      -webkit-font-smoothing: antialiased;
     }
-    h1 { font-size: 14px; margin: 0 0 8px; }
-    #status { font-size: 12px; margin-bottom: 10px; color: #444; }
+
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .mark {
+      width: 20px; height: 20px;
+      border-radius: 5px;
+      background: #1b7f4e;
+      color: #fff;
+      font: 700 12px/1 "Segoe UI", system-ui;
+      display: grid; place-items: center;
+    }
+    .brand-name { font: 600 14px/1 "Segoe UI", system-ui; }
+
+    .status { display: flex; align-items: flex-start; gap: 7px; }
+    .dot {
+      width: 7px; height: 7px;
+      margin-top: 5px;
+      border-radius: 50%;
+      background: #8a8a8a;
+      flex: none;
+    }
+    .dot.live { background: #1b7f4e; animation: pulse 1.6s ease-in-out infinite; }
+    .dot.bad { background: #b00020; }
+    #status { font: 400 12px/1.4 "Segoe UI", system-ui; color: #444; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    /* Naming both streams makes it obvious what capture actually grabbed. */
+    .streams {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 10px 12px;
+      background: #f7f9f8;
+      border: 1px solid #e4eae7;
+      border-radius: 4px;
+    }
+    .stream { display: flex; align-items: center; justify-content: space-between; }
+    .stream span { font: 400 12px/1 "Segoe UI", system-ui; }
+    .stream .mic { color: #14603b; }
+    .stream .tab { color: #0b4f8f; }
+    .stream .id { font: 400 11px/1 "Cascadia Mono", Consolas, monospace; color: #6b6b6b; }
+
+    .alert {
+      padding: 10px 12px;
+      background: #fdf2f3;
+      border: 1px solid #f0c4c9;
+      border-radius: 4px;
+      font: 400 11px/1.55 "Segoe UI", system-ui;
+      color: #b00020;
+      text-wrap: pretty;
+    }
+
     .row { display: flex; gap: 8px; }
     button {
       flex: 1;
-      padding: 8px 10px;
-      border: 1px solid #ccc;
+      height: 34px;
       border-radius: 4px;
-      background: #f5f5f5;
       cursor: pointer;
     }
     button:disabled { opacity: 0.5; cursor: default; }
-    #start { background: #1b7f4e; color: #fff; border-color: #16653e; }
-    #stop { background: #fff; }
-    label { font-size: 11px; display: block; margin-top: 10px; }
-    input { width: 100%; box-sizing: border-box; margin-top: 4px; }
+    #start {
+      font: 600 13px/1 "Segoe UI", system-ui;
+      color: #fff;
+      background: #1b7f4e;
+      border: 1px solid #16653e;
+    }
+    #stop {
+      font: 400 13px/1 "Segoe UI", system-ui;
+      color: #1a1a1a;
+      background: #fff;
+      border: 1px solid #ccc;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field > span { font: 400 11px/1.3 "Segoe UI", system-ui; color: #666; }
+    #port {
+      box-sizing: border-box;
+      width: 100%;
+      height: 30px;
+      padding: 0 8px;
+      font: 400 13px/1 "Cascadia Mono", Consolas, monospace;
+      color: #1a1a1a;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #port:disabled { color: #8a8a8a; background: #f5f5f5; border-color: #ddd; }
+    .field.invalid #port { border-color: #b00020; }
+
+    .hint { margin: 0; font: 400 11px/1.5 "Segoe UI", system-ui; color: #8a8a8a; text-wrap: pretty; }
   </style>
 </head>
 <body>
-  <h1>Krisp Dual-Stream</h1>
-  <div id="status">Status: idle</div>
+  <div class="brand">
+    <span class="mark">K</span>
+    <span class="brand-name">Krisp Dual-Stream</span>
+  </div>
+
+  <div class="status">
+    <span id="dot" class="dot"></span>
+    <span id="status">Status: idle</span>
+  </div>
+
+  <div id="streams" class="streams" hidden>
+    <div class="stream"><span class="mic">Microphone</span><span class="id">stream 0</span></div>
+    <div class="stream"><span class="tab">Meet tab audio</span><span class="id">stream 1</span></div>
+  </div>
+
+  <div id="alert" class="alert" hidden></div>
+
   <div class="row">
     <button id="start" type="button">Start</button>
     <button id="stop" type="button" disabled>Stop</button>
   </div>
-  <label>
-    Desktop WS port
+
+  <label class="field" id="portField">
+    <span>Desktop WS port</span>
     <!-- Value is set from DEFAULT_PORT in popup.js. -->
     <input id="port" type="number" min="1" max="65535" />
   </label>
+
+  <p id="hint" class="hint">Start the desktop app first, then capture from the active Meet tab.</p>
+
   <script type="module" src="popup.js"></script>
 </body>
 </html>

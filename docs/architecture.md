@@ -1,6 +1,6 @@
 # Architecture
 
-Dual-stream capture from Google Meet: microphone and tab audio stay separate end-to-end, transcribed on the desktop, shown in two panes.
+Dual-stream capture from Google Meet: microphone and tab audio stay separate end-to-end, transcribed on the desktop, and shown as one timeline where every line is labelled with the stream it came from.
 
 ## Pipeline
 
@@ -9,10 +9,27 @@ Chrome extension                         C++ desktop app (Qt 6.8.3 via Conan)
 ────────────────                         ────────────────────────────────────
 Mic capture  ──┐                         ┌─ WebSocket server (:8765)
                ├──► WS localhost ───────►├─ Deepgram STT (mic + speaker)
-Tab capture  ──┘    PCM s16le 16 kHz     └─ dual transcript UI
+Tab capture  ──┘    PCM s16le 16 kHz     └─ labelled transcript timeline
 ```
 
 Extension → localhost WebSocket → desktop receiver → two Deepgram sessions → Qt UI.
+
+## Keeping the streams separate
+
+`task.md` asks for the transcripts to be shown "with microphone and speaker streams
+kept separate so the conversation can be followed in a natural order". Both halves
+shape the design.
+
+*Separate* is structural: the extension captures two `MediaStream`s and never mixes
+them, each frame is tagged `0=mic` / `1=speaker` on the wire, and the desktop runs an
+independent Deepgram session per stream. Nothing downstream can confuse them.
+
+*Natural order* is what the window is for. Two side-by-side panes keep the streams
+apart but make the conversation harder to follow — a reader has to re-interleave them
+by timestamp. So the transcripts share one timeline in the order they were spoken,
+and every line carries its stream: a green **You** chip or a blue **Others** chip,
+with the legend naming them in full. Separation is preserved as identity on each
+line, which is what makes the order readable rather than working against it.
 
 ## Stack
 

@@ -19,12 +19,14 @@ Use after a fresh clone on Windows. Automated tests cover the wire protocol, str
 - [ ] First run: the microphone permission tab appears, **Allow** closes it and capture continues
 - [ ] Mic and speaker byte counters increase in the desktop window
 - [ ] You can still hear remote participants while capturing
-- [ ] Live transcripts appear in **Microphone** and **Speaker** panes separately
-- [ ] Final lines carry an `[HH:mm:ss]` stamp, so the two panes can be read as one conversation
+- [ ] Live transcripts appear in the conversation timeline, each line stamped and labelled **You** (green) or **Others** (blue)
 - [ ] A sentence settles into one line when the speaker pauses, not several fragments mid-sentence
-- [ ] In-flight speech shows greyed and unstamped *below* each pane, then moves up as a stamped line
-- [ ] Scrolling back through a pane mid-call stays put; it only follows new lines when already at the bottom
+- [ ] In-flight speech shows greyed and italic with a `···` stamp, and is replaced by the settled line
+- [ ] Scrolling back mid-call stays put; the timeline only follows new lines when already at the bottom
+- [ ] **Clear transcripts** empties the timeline and disables itself; capture keeps running
 - [ ] Status line reads `STT: mic connected, speaker connected` while capturing
+- [ ] Popup lists **Microphone** (stream 0) and **Meet tab audio** (stream 1) while capturing, with a pulsing green dot
+- [ ] Toolbar badge shows a green dot while capturing and clears on stop
 - [ ] **Stop** cleans up; status returns to idle/listening
 
 ## Notes

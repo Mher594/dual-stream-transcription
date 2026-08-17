@@ -4,6 +4,7 @@
 // extension origin, so once it is given here the offscreen document inherits it.
 
 const msg = document.getElementById("msg");
+const note = document.getElementById("note");
 
 try {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -14,5 +15,7 @@ try {
     `Microphone access was not granted (${err?.message || err}). ` +
     "Allow it for this extension at chrome://settings/content/microphone, then press Start again.";
   msg.classList.add("error");
+  note.textContent =
+    "Capture carries on with tab audio only, so the speaker pane keeps working while this is unresolved.";
   chrome.runtime.sendMessage({ type: "micPermissionResult", granted: false }).catch(() => {});
 }

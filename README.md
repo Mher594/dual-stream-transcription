@@ -1,6 +1,6 @@
 # Krisp — Extension + Desktop Dual-Stream Pipeline
 
-Chrome extension + C++ desktop app: capture Meet as **mic** and **tab audio** separately, transcribe with Deepgram, show live dual-pane transcripts.
+Chrome extension + C++ desktop app: capture Meet as **mic** and **tab audio** separately, transcribe with Deepgram, and show a live transcript timeline where every line is labelled with the stream it came from.
 
 More detail: [Architecture](docs/architecture.md) · [Full verification checklist](docs/verification.md) · [Troubleshooting](docs/troubleshooting.md)
 
@@ -95,13 +95,13 @@ Expect: `Listening on ws://127.0.0.1:8765`. The terminal keeps a timestamped log
 1. `chrome://extensions` → Developer mode → **Load unpacked** → `extension/`
 2. Open Meet (keep tab active) → extension icon → **Start**
 3. First run only: a tab opens asking for microphone access → **Allow**. It closes itself, and capture continues. Chrome remembers the grant.
-4. Watch Mic / Speaker panes in the desktop app → **Stop** when done
+4. Watch the conversation timeline in the desktop app → **Stop** when done
 
 ## Quick verify
 
 - [ ] Build + `krisp_tests` pass
 - [ ] Desktop listening; extension connects; byte counters rise for both streams
-- [ ] Dual live transcripts; you can still hear the call
+- [ ] Live transcript lines labelled **You** / **Others**; you can still hear the call
 
 Full checklist: [docs/verification.md](docs/verification.md). Problems: [docs/troubleshooting.md](docs/troubleshooting.md).
 

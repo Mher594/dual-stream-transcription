@@ -1,26 +1,39 @@
 import { DEFAULT_PORT } from "./protocol.js";
 
-const statusEl = document.getElementById("status");
-const startBtn = document.getElementById("start");
-const stopBtn = document.getElementById("stop");
-const portInput = document.getElementById("port");
+const el = {
+  status: document.getElementById("status"),
+  dot: document.getElementById("dot"),
+  streams: document.getElementById("streams"),
+  alert: document.getElementById("alert"),
+  start: document.getElementById("start"),
+  stop: document.getElementById("stop"),
+  port: document.getElementById("port"),
+  portField: document.getElementById("portField"),
+  hint: document.getElementById("hint"),
+};
 
 function setUi(state) {
-  statusEl.textContent = `Status: ${state.status || "unknown"}`;
-  if (state.detail) {
-    statusEl.textContent += ` — ${state.detail}`;
-  }
-  const capturing = state.status === "capturing" || state.status === "connecting";
-  startBtn.disabled = capturing;
-  stopBtn.disabled = !capturing && state.status !== "connected";
-  if (state.status === "capturing") {
-    stopBtn.disabled = false;
-    startBtn.disabled = true;
-  }
-  if (state.status === "idle" || state.status === "error" || state.status === "stopped") {
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-  }
+  const status = state.status || "unknown";
+  const capturing = status === "capturing";
+  const busy = capturing || status === "connecting";
+  const failed = status === "error";
+
+  // The red panel carries the error text, so the status line stays short rather
+  // than saying the same thing twice.
+  el.status.textContent = failed
+    ? "Status: error"
+    : `Status: ${status}${state.detail ? ` — ${state.detail}` : ""}`;
+  el.dot.className = `dot${capturing ? " live" : failed ? " bad" : ""}`;
+
+  el.streams.hidden = !capturing;
+  el.alert.hidden = !failed;
+  el.alert.textContent = failed ? state.detail || "Capture failed." : "";
+
+  el.start.disabled = busy;
+  el.stop.disabled = !busy;
+  el.port.disabled = busy;
+  el.portField.classList.toggle("invalid", failed);
+  el.hint.hidden = busy;
 }
 
 async function refresh() {
@@ -28,13 +41,13 @@ async function refresh() {
   if (state) setUi(state);
 }
 
-startBtn.addEventListener("click", async () => {
+el.start.addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
-    setUi({ status: "error", detail: "No active tab" });
+    setUi({ status: "error", detail: "No active tab to capture." });
     return;
   }
-  const port = Number(portInput.value) || DEFAULT_PORT;
+  const port = Number(el.port.value) || DEFAULT_PORT;
   await chrome.storage.local.set({ wsPort: port });
   const result = await chrome.runtime.sendMessage({
     type: "startCapture",
@@ -48,14 +61,14 @@ startBtn.addEventListener("click", async () => {
   }
 });
 
-stopBtn.addEventListener("click", async () => {
+el.stop.addEventListener("click", async () => {
   await chrome.runtime.sendMessage({ type: "stopCapture" });
   await refresh();
 });
 
-portInput.value = String(DEFAULT_PORT);
+el.port.value = String(DEFAULT_PORT);
 chrome.storage.local.get(["wsPort"]).then((v) => {
-  if (v.wsPort) portInput.value = String(v.wsPort);
+  if (v.wsPort) el.port.value = String(v.wsPort);
 });
 
 chrome.runtime.onMessage.addListener((msg) => {
